@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四个实验界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #34495e;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            background: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            background: #2c3e50;
+        }
+        
+        .tab.active {
+            background: #1abc9c;
+            font-weight: bold;
+        }
+        
+        .experiment {
+            display: none;
+            padding: 30px;
+        }
+        
+        .experiment.active {
+            display: block;
+        }
+        
+        .experiment-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #1abc9c;
+            padding-bottom: 10px;
+        }
+        
+        .experiment-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .visualization {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        button {
+            background: #1abc9c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #16a085;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 1.5s cubic-bezier(0.17, 0.67, 0.21, 0.99);
+            box-shadow: 0 0 0 8px #2c3e50, 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .wheel-section {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            border-right: 2px solid rgba(255, 255, 255, 0.8);
+            box-sizing: border-box;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 40px;
+            background: #e74c3c;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+        
+        .result-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .result-table th, .result-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        .result-table th {
+            background: #34495e;
+            color: white;
+        }
+        
+        .result-table tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        
+        .dice-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .dice {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        
+        .dice::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 2px solid #2c3e50;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .wheel-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            z-index: 5;
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #2c3e50;
+            border-radius: 50%;
+            z-index: 5;
+        }
+        
+        @media (max-width: 768px) {
+            .experiment-content {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>四个实验界面</h1>
+            <p class="description">本页面包含四个不同的概率实验：幸运大转盘、自定义颜色转盘、骰子实验和快乐大转盘。</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="experiment1">实验1: 幸运大转盘</button>
+            <button class="tab" data-tab="experiment2">实验2: 自定义颜色转盘</button>
+            <button class="tab" data-tab="experiment3">实验3: 骰子实验</button>
+            <button class="tab" data-tab="experiment4">实验4: 快乐大转盘</button>
+        </div>
+        
+        <!-- 实验1: 幸运大转盘 -->
+        <div id="experiment1" class="experiment active">
+            <h2 class="experiment-title">实验1: 幸运大转盘</h2>
+            <div class="experiment-content">
+                <div class="controls">
+                    <div class="control-group">
+                        <button id="reveal-btn">开盖</button>
+                        <p id="reveal-info" class="hidden" style="margin-top: 10px; color: #e74c3c; font-weight: bold;">
+                            红色格子: 4个 | 蓝色格子: 2个
+                        </p>
+                    </div>
+                    <div class="control-group">
+                        <button id="spin1-btn">转动转盘</button>
+                    </div>
+                    <div class="control-group">
+                        <h3>转动结果统计</h3>
+                        <div class="result-display">
+                            <p>红色格子次数: <span id="red-count">0</span></p>
+                            <p>蓝色格子次数: <span id="blue-count">0</span></p>
+                            <p>总转动次数: <span id="total-spins1">0</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="visualization">
+                    <div class="wheel-container">
+                        <div class="pointer"></div>
+                        <div id="wheel1" class="wheel">
+                            <div class="wheel-center"></div>
+                            <div class="wheel-text">幸运大转盘</div>
+                        </div>
+                    </div>
+                    <div class="result-display">
+                        <h3>本次转动结果</h3>
+                        <p id="current-result1">等待转动...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实验2: 自定义颜色转盘 -->
+        <div id="experiment2" class="experiment">
+            <h2 class="experiment-title">实验2: 自定义颜色转盘</h2>
+            <div class="experiment-content">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="red-count-input">红色格子数量:</label>
+                        <input type="number" id="red-count-input" min="1" max="20" value="4">
+                    </div>
+                    <div class="control-group">
+                        <label for="blue-count-input">蓝色格子数量:</label>
+                        <input type="number" id="blue-count-input" min="1" max="20" value="2">
+                    </div>
+                    <div class="control-group">
+                        <label for="spin-count-input">转动次数:</label>
+                        <input type="number" id="spin-count-input" min="1" max="100" value="10">
+                    </div>
+                    <button id="apply-settings">应用设置</button>
+                    <button id="spin2-btn">开始转动</button>
+                </div>
+                <div class="visualization">
+                    <div class="wheel-container">
+                        <div class="pointer"></div>
+                        <div id="wheel2" class="wheel">
+                            <div class="wheel-center"></div>
+                        </div>
+                    </div>
+                    <div class="result-display">
+                        <h3>转动结果</h3>
+                        <p>红色命中: <span id="red-hit">0</span></p>
+                        <p>蓝色命中: <span id="blue-hit">0</span></p>
+                        <p>总转动次数: <span id="total-spins2">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实验3: 骰子实验 -->
+        <div id="experiment3" class="experiment">
+            <h2 class="experiment-title">实验3: 骰子实验</h2>
+            <div class="experiment-content">
+                <div class="controls">
+                    <div class="control-group">
+                        <label>实验模式:</label>
+                        <div>
+                            <input type="radio" id="mode-10" name="dice-mode" value="10" checked>
+                            <label for="mode-10" style="display: inline;">10次实验</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="mode-custom" name="dice-mode" value="custom">
+                            <label for="mode-custom" style="display: inline;">自定义次数 (1-9999)</label>
+                        </div>
+                    </div>
+                    <div class="control-group" id="custom-count-group" style="display: none;">
+                        <label for="custom-count">实验次数:</label>
+                        <input type="number" id="custom-count" min="1" max="9999" value="100">
+                    </div>
+                    <button id="roll-dice-btn">开始投掷</button>
+                    <button id="reset-dice-btn">重置数据</button>
+                </div>
+                <div class="visualization">
+                    <div class="dice-container">
+                        <div class="dice" id="dice-display">1</div>
+                        <div class="result-display">
+                            <h3>骰子点数统计</h3>
+                            <table class="result-table">
+                                <thead>
+                                    <tr>
+                                        <th>点数</th>
+                                        <th>次数</th>
+                                        <th>百分比</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dice-results">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实验4: 快乐大转盘 -->
+        <div id="experiment4" class="experiment">
+            <h2 class="experiment-title">实验4: 快乐大转盘</h2>
+            <div class="experiment-content">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="red-count-4">红色格子数量:</label>
+                        <input type="number" id="red-count-4" min="1" max="10" value="4">
+                    </div>
+                    <div class="control-group">
+                        <label for="yellow-count-4">黄色格子数量:</label>
+                        <input type="number" id="yellow-count-4" min="1" max="10" value="4">
+                    </div>
+                    <div class="control-group">
+                        <label for="blue-count-4">蓝色格子数量:</label>
+                        <input type="number" id="blue-count-4" min="1" max="10" value="4">
+                    </div>
+                    <button id="apply-settings-4">应用设置</button>
+                    <button id="spin4-btn">开始转动</button>
+                </div>
+                <div class="visualization">
+                    <div class="wheel-container">
+                        <div class="pointer"></div>
+                        <div id="wheel4" class="wheel">
+                            <div class="wheel-center"></div>
+                        </div>
+                    </div>
+                    <div class="result-display">
+                        <h3>转动结果</h3>
+                        <p>总转动次数: <span id="total-spins4">0</span></p>
+                        <p>落在黄色格子次数: <span id="yellow-hit">0</span></p>
+                        <p>当前结果: <span id="current-result4">等待转动...</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签页切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 移除所有active类
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.experiment').forEach(e => e.classList.remove('active'));
+                
+                // 添加active类到当前标签和对应实验
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // 实验1: 幸运大转盘
+        const revealBtn = document.getElementById('reveal-btn');
+        const revealInfo = document.getElementById('reveal-info');
+        const spin1Btn = document.getElementById('spin1-btn');
+        const wheel1 = document.getElementById('wheel1');
+        const redCount = document.getElementById('red-count');
+        const blueCount = document.getElementById('blue-count');
+        const totalSpins1 = document.getElementById('total-spins1');
+        const currentResult1 = document.getElementById('current-result1');
+        
+        let redSpins = 0;
+        let blueSpins = 0;
+        let totalSpins = 0;
+        let isSpinning1 = false;
+        let isRevealed1 = false;
+        
+        // 开盖功能
+        revealBtn.addEventListener('click', () => {
+            isRevealed1 = true;
+            revealInfo.classList.remove('hidden');
+            createWheel1();
+        });
+        
+        // 创建转盘1
+        function createWheel1() {
+            wheel1.innerHTML = '';
+            wheel1.appendChild(createWheelCenter());
+            wheel1.appendChild(createWheelText());
+            
+            if (!isRevealed1) return;
+            
+            const sections = 6;
+            const angle = 360 / sections;
+            
+            // 4个红色，2个蓝色
+            for (let i = 0; i < sections; i++) {
+                const section = document.createElement('div');
+                section.className = 'wheel-section';
+                section.textContent = i + 1;
+                section.style.backgroundColor = i < 4 ? '#e74c3c' : '#3498db';
+                section.style.transform = `rotate(${i * angle}deg) skewY(${90 - angle}deg)`;
+                
+                wheel1.appendChild(section);
+            }
+        }
+        
+        // 转动转盘1
+        spin1Btn.addEventListener('click', () => {
+            if (isSpinning1) return;
+            
+            isSpinning1 = true;
+            spin1Btn.disabled = true;
+            
+            // 随机选择结果 (4/6概率红色，2/6概率蓝色)
+            const result = Math.random() < 4/6 ? 'red' : 'blue';
+            
+            // 计算旋转角度 - 确保箭头不会停在格子线上
+            const currentRotation = getCurrentRotation(wheel1);
+            const redSectionAngle = 60; // 每个格子60度
+            const redOffset = Math.random() * 40 + 10; // 红色区域内的随机偏移 (10-50度)
+            const blueOffset = Math.random() * 40 + 10; // 蓝色区域内的随机偏移 (10-50度)
+            
+            let targetRotation;
+            if (result === 'red') {
+                const redSection = Math.floor(Math.random() * 4); // 随机选择一个红色格子
+                targetRotation = 360 * 5 + redSection * redSectionAngle + redOffset;
+            } else {
+                const blueSection = Math.floor(Math.random() * 2); // 随机选择一个蓝色格子
+                targetRotation = 360 * 5 + (4 + blueSection) * redSectionAngle + blueOffset;
+            }
+            
+            // 应用旋转
+            wheel1.style.transform = `rotate(${currentRotation + targetRotation}deg)`;
+            
+            // 更新结果
+            setTimeout(() => {
+                if (result === 'red') {
+                    redSpins++;
+                    redCount.textContent = redSpins;
+                    currentResult1.textContent = '红色格子';
+                    currentResult1.style.color = '#e74c3c';
+                } else {
+                    blueSpins++;
+                    blueCount.textContent = blueSpins;
+                    currentResult1.textContent = '蓝色格子';
+                    currentResult1.style.color = '#3498db';
+                }
+                
+                totalSpins++;
+                totalSpins1.textContent = totalSpins;
+                
+                isSpinning1 = false;
+                spin1Btn.disabled = false;
+            }, 1500);
+        });
+        
+        // 实验2: 自定义颜色转盘
+        const redCountInput = document.getElementById('red-count-input');
+        const blueCountInput = document.getElementById('blue-count-input');
+        const spinCountInput = document.getElementById('spin-count-input');
+        const applySettings = document.getElementById('apply-settings');
+        const spin2Btn = document.getElementById('spin2-btn');
+        const wheel2 = document.getElementById('wheel2');
+        const redHit = document.getElementById('red-hit');
+        const blueHit = document.getElementById('blue-hit');
+        const totalSpins2 = document.getElementById('total-spins2');
+        
+        let redHits = 0;
+        let blueHits = 0;
+        let totalSpins2Count = 0;
+        let isSpinning2 = false;
+        let spinCount = 10;
+        
+        // 应用设置
+        applySettings.addEventListener('click', () => {
+            spinCount = parseInt(spinCountInput.value);
+            createWheel2();
+        });
+        
+        // 创建转盘2
+        function createWheel2() {
+            wheel2.innerHTML = '';
+            wheel2.appendChild(createWheelCenter());
+            
+            const redSections = parseInt(redCountInput.value);
+            const blueSections = parseInt(blueCountInput.value);
+            const totalSections = redSections + blueSections;
+            const angle = 360 / totalSections;
+            
+            for (let i = 0; i < totalSections; i++) {
+                const section = document.createElement('div');
+                section.className = 'wheel-section';
+                section.textContent = i + 1;
+                section.style.backgroundColor = i < redSections ? '#e74c3c' : '#3498db';
+                section.style.transform = `rotate(${i * angle}deg) skewY(${90 - angle}deg)`;
+                
+                wheel2.appendChild(section);
+            }
+        }
+        
+        // 转动转盘2
+        spin2Btn.addEventListener('click', () => {
+            if (isSpinning2) return;
+            
+            isSpinning2 = true;
+            spin2Btn.disabled = true;
+            
+            const redSections = parseInt(redCountInput.value);
+            const blueSections = parseInt(blueCountInput.value);
+            const totalSections = redSections + blueSections;
+            const sectionAngle = 360 / totalSections;
+            
+            // 随机选择结果
+            const resultIndex = Math.floor(Math.random() * totalSections);
+            const result = resultIndex < redSections ? 'red' : 'blue';
+            
+            // 计算旋转角度 - 确保箭头不会停在格子线上
+            const currentRotation = getCurrentRotation(wheel2);
+            const offset = Math.random() * (sectionAngle - 10) + 5; // 在格子中间区域随机偏移
+            const targetRotation = 360 * 5 + resultIndex * sectionAngle + offset;
+            
+            // 应用旋转
+            wheel2.style.transform = `rotate(${currentRotation + targetRotation}deg)`;
+            
+            // 更新结果
+            setTimeout(() => {
+                if (result === 'red') {
+                    redHits++;
+                    redHit.textContent = redHits;
+                } else {
+                    blueHits++;
+                    blueHit.textContent = blueHits;
+                }
+                
+                totalSpins2Count++;
+                totalSpins2.textContent = totalSpins2Count;
+                
+                isSpinning2 = false;
+                spin2Btn.disabled = false;
+            }, 1500);
+        });
+        
+        // 实验3: 骰子实验
+        const mode10 = document.getElementById('mode-10');
+        const modeCustom = document.getElementById('mode-custom');
+        const customCountGroup = document.getElementById('custom-count-group');
+        const customCount = document.getElementById('custom-count');
+        const rollDiceBtn = document.getElementById('roll-dice-btn');
+        const resetDiceBtn = document.getElementById('reset-dice-btn');
+        const diceDisplay = document.getElementById('dice-display');
+        const diceResults = document.getElementById('dice-results');
+        
+        let diceCounts = [0, 0, 0, 0, 0, 0];
+        let totalRolls = 0;
+        let isRolling = false;
+        
+        // 切换实验模式
+        mode10.addEventListener('change', () => {
+            customCountGroup.style.display = 'none';
+        });
+        
+        modeCustom.addEventListener('change', () => {
+            customCountGroup.style.display = 'block';
+        });
+        
+        // 投掷骰子
+        rollDiceBtn.addEventListener('click', () => {
+            if (isRolling) return;
+            
+            let rolls = 10;
+            
+            if (modeCustom.checked) {
+                rolls = parseInt(customCount.value);
+                if (rolls < 1 || rolls > 9999) {
+                    alert('请输入1-9999之间的数字');
+                    return;
+                }
+            }
+            
+            isRolling = true;
+            rollDiceBtn.disabled = true;
+            
+            // 执行多次投掷
+            for (let i = 0; i < rolls; i++) {
+                setTimeout(() => {
+                    const result = Math.floor(Math.random() * 6) + 1;
+                    diceCounts[result - 1]++;
+                    totalRolls++;
+                    
+                    // 更新骰子显示
+                    diceDisplay.textContent = result;
+                    
+                    // 添加动画效果
+                    diceDisplay.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        diceDisplay.style.transform = 'scale(1)';
+                    }, 100);
+                    
+                    // 更新显示
+                    if (i === rolls - 1) {
+                        setTimeout(() => {
+                            updateDiceResults();
+                            isRolling = false;
+                            rollDiceBtn.disabled = false;
+                        }, 500);
+                    }
+                }, i * 100);
+            }
+        });
+        
+        // 重置数据
+        resetDiceBtn.addEventListener('click', () => {
+            diceCounts = [0, 0, 0, 0, 0, 0];
+            totalRolls = 0;
+            updateDiceResults();
+            diceDisplay.textContent = '1';
+        });
+        
+        // 更新骰子结果表格
+        function updateDiceResults() {
+            diceResults.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+                
+                const cell1 = document.createElement('td');
+                cell1.textContent = i + 1;
+                
+                const cell2 = document.createElement('td');
+                cell2.textContent = diceCounts[i];
+                
+                const cell3 = document.createElement('td');
+                const percentage = totalRolls > 0 ? (diceCounts[i] / totalRolls * 100).toFixed(2) : '0.00';
+                cell3.textContent = `${percentage}%`;
+                
+                row.appendChild(cell1);
+                row.appendChild(cell2);
+                row.appendChild(cell3);
+                
+                diceResults.appendChild(row);
+            }
+        }
+        
+        // 实验4: 快乐大转盘
+        const redCount4 = document.getElementById('red-count-4');
+        const yellowCount4 = document.getElementById('yellow-count-4');
+        const blueCount4 = document.getElementById('blue-count-4');
+        const applySettings4 = document.getElementById('apply-settings-4');
+        const spin4Btn = document.getElementById('spin4-btn');
+        const wheel4 = document.getElementById('wheel4');
+        const totalSpins4 = document.getElementById('total-spins4');
+        const yellowHit = document.getElementById('yellow-hit');
+        const currentResult4 = document.getElementById('current-result4');
+        
+        let totalSpins4Count = 0;
+        let yellowHits = 0;
+        let isSpinning4 = false;
+        
+        // 应用设置
+        applySettings4.addEventListener('click', createWheel4);
+        
+        // 创建转盘4
+        function createWheel4() {
+            wheel4.innerHTML = '';
+            wheel4.appendChild(createWheelCenter());
+            
+            const redSections = parseInt(redCount4.value);
+            const yellowSections = parseInt(yellowCount4.value);
+            const blueSections = parseInt(blueCount4.value);
+            const totalSections = redSections + yellowSections + blueSections;
+            const angle = 360 / totalSections;
+            
+            for (let i = 0; i < totalSections; i++) {
+                const section = document.createElement('div');
+                section.className = 'wheel-section';
+                section.textContent = i + 1;
+                
+                if (i < redSections) {
+                    section.style.backgroundColor = '#e74c3c';
+                } else if (i < redSections + yellowSections) {
+                    section.style.backgroundColor = '#f1c40f';
+                } else {
+                    section.style.backgroundColor = '#3498db';
+                }
+                
+                section.style.transform = `rotate(${i * angle}deg) skewY(${90 - angle}deg)`;
+                
+                wheel4.appendChild(section);
+            }
+        }
+        
+        // 转动转盘4
+        spin4Btn.addEventListener('click', () => {
+            if (isSpinning4) return;
+            
+            isSpinning4 = true;
+            spin4Btn.disabled = true;
+            
+            const redSections = parseInt(redCount4.value);
+            const yellowSections = parseInt(yellowCount4.value);
+            const blueSections = parseInt(blueCount4.value);
+            const totalSections = redSections + yellowSections + blueSections;
+            const sectionAngle = 360 / totalSections;
+            
+            // 确保不落在黄色格子上
+            let resultIndex;
+            do {
+                resultIndex = Math.floor(Math.random() * totalSections);
+            } while (resultIndex >= redSections && resultIndex < redSections + yellowSections);
+            
+            // 计算旋转角度 - 确保箭头不会停在格子线上
+            const currentRotation = getCurrentRotation(wheel4);
+            const offset = Math.random() * (sectionAngle - 10) + 5; // 在格子中间区域随机偏移
+            const targetRotation = 360 * 5 + resultIndex * sectionAngle + offset;
+            
+            // 应用旋转
+            wheel4.style.transform = `rotate(${currentRotation + targetRotation}deg)`;
+            
+            // 更新结果
+            setTimeout(() => {
+                totalSpins4Count++;
+                totalSpins4.textContent = totalSpins4Count;
+                
+                // 检查是否落在黄色格子上（理论上不会，但以防万一）
+                if (resultIndex >= redSections && resultIndex < redSections + yellowSections) {
+                    yellowHits++;
+                    yellowHit.textContent = yellowHits;
+                    currentResult4.textContent = '黄色格子';
+                    currentResult4.style.color = '#f1c40f';
+                } else if (resultIndex < redSections) {
+                    currentResult4.textContent = '红色格子';
+                    currentResult4.style.color = '#e74c3c';
+                } else {
+                    currentResult4.textContent = '蓝色格子';
+                    currentResult4.style.color = '#3498db';
+                }
+                
+                isSpinning4 = false;
+                spin4Btn.disabled = false;
+            }, 1500);
+        });
+        
+        // 辅助函数：获取当前旋转角度
+        function getCurrentRotation(element) {
+            const transform = element.style.transform;
+            if (!transform) return 0;
+            
+            const match = transform.match(/rotate\(([-]?\d+)deg\)/);
+            return match ? parseInt(match[1]) % 360 : 0;
+        }
+        
+        // 创建转盘中心
+        function createWheelCenter() {
+            const center = document.createElement('div');
+            center.className = 'wheel-center';
+            return center;
+        }
+        
+        // 创建转盘文字
+        function createWheelText() {
+            const text = document.createElement('div');
+            text.className = 'wheel-text';
+            text.textContent = '幸运大转盘';
+            return text;
+        }
+        
+        // 初始化
+        function init() {
+            createWheel1();
+            createWheel2();
+            createWheel4();
+            updateDiceResults();
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
